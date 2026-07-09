@@ -2,7 +2,7 @@
 Poll Model
 """
 
-from app import db
+from models import db
 from datetime import datetime
 
 class Poll(db.Model):
@@ -15,10 +15,6 @@ class Poll(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    user = db.relationship('User', backref='polls')
-    options = db.relationship('PollOption', backref='poll', lazy=True, cascade='all, delete-orphan')
-    
     def __repr__(self):
         return f'<Poll {self.question}>'
     
@@ -27,7 +23,6 @@ class Poll(db.Model):
             'id': self.id,
             'group_id': self.group_id,
             'question': self.question,
-            'options': [o.to_dict() for o in self.options],
             'created_at': self.created_at.isoformat()
         }
 
@@ -39,9 +34,6 @@ class PollOption(db.Model):
     text = db.Column(db.String(255), nullable=False)
     votes = db.Column(db.Integer, default=0)
     
-    # Relationships
-    voters = db.relationship('User', secondary='poll_votes', backref='voted_options')
-    
     def __repr__(self):
         return f'<PollOption {self.text}>'
     
@@ -52,7 +44,6 @@ class PollOption(db.Model):
             'votes': self.votes
         }
 
-# Association table for poll votes
 poll_votes = db.Table(
     'poll_votes',
     db.Column('poll_option_id', db.Integer, db.ForeignKey('poll_options.id'), primary_key=True),
